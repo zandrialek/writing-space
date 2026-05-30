@@ -6,7 +6,7 @@ const SPACE = {
       name: "Sarah Russell",
       writer: "your name",
       accent: "#8A82C4",
-      avatarUrl: "https://i.ibb.co/35Ht4YG2/New-Project-68.png"
+      avatarUrl: null
     },
     wes: {
       id: "wes",
@@ -24,7 +24,7 @@ const SPACE = {
       board: "retired threads",
       timeline: "december 12, 2003",
       characters: ["sarah", "wes"],
-      summary: "The night Sarah and Wes meet properly — end of finals, a bar in DC, Grace working the room. The first time he looks at her and she looks back, and neither of them look away quite fast enough.",
+      summary: null,
       before: null,
       after: null,
       posts: [
