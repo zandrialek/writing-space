@@ -1,1 +1,462 @@
-<h1>hello</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>threads</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-deep:      #181A1E;
+    --bg-mid:       #1F2127;
+    --bg-surface:   #252830;
+    --bg-raised:    #2C2F38;
+    --border-soft:  rgba(255,255,255,0.07);
+    --border-med:   rgba(255,255,255,0.11);
+    --text-primary: #D8D4CE;
+    --text-secondary: #8A8990;
+    --text-muted:   #50535C;
+    --font-ui:      'Jost', sans-serif;
+    --font-prose:   'EB Garamond', Georgia, serif;
+  }
+
+  html { background: var(--bg-deep); color: var(--text-primary); font-family: var(--font-ui); }
+
+  body {
+    min-height: 100vh;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ── site header ── */
+  .site-header {
+    width: 100%;
+    padding: 1.25rem 2rem;
+    border-bottom: 0.5px solid var(--border-soft);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-deep);
+  }
+
+  .site-name {
+    font-family: var(--font-prose);
+    font-size: 18px;
+    font-style: italic;
+    color: var(--text-secondary);
+    letter-spacing: 0.02em;
+  }
+
+  .site-nav {
+    display: flex;
+    gap: 1.5rem;
+    list-style: none;
+  }
+
+  .site-nav a {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+
+  .site-nav a:hover { color: var(--text-secondary); }
+
+  /* ── layout ── */
+  .page {
+    width: 100%;
+    max-width: 780px;
+    padding: 3rem 2rem 6rem;
+  }
+
+  /* ── thread header ── */
+  .thread-header {
+    margin-bottom: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 0.5px solid var(--border-soft);
+  }
+
+  .board-label {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .thread-title {
+    font-family: var(--font-prose);
+    font-size: 32px;
+    font-weight: 400;
+    font-style: italic;
+    color: var(--text-primary);
+    margin-bottom: 1.25rem;
+    line-height: 1.2;
+  }
+
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 0.5px solid var(--border-soft);
+  }
+
+  .pill-status  { background: rgba(58,168,130,0.12); color: #3AA882; border-color: rgba(58,168,130,0.2); }
+  .pill-time    { background: rgba(255,255,255,0.04); color: var(--text-secondary); }
+  .pill-chars   { background: rgba(255,255,255,0.04); color: var(--text-secondary); }
+  .pill-nav     { background: transparent; color: var(--text-muted); }
+
+  .thread-summary {
+    margin-top: 1.25rem;
+    font-family: var(--font-prose);
+    font-size: 16px;
+    font-style: italic;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+
+  /* ── posts label ── */
+  .posts-label {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-align: center;
+    margin-bottom: 1.5rem;
+    opacity: 0.5;
+  }
+
+  /* ── timeskip ── */
+  .timeskip {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 0.25rem 0 1rem;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-style: italic;
+    letter-spacing: 0.04em;
+    opacity: 0.6;
+  }
+
+  .timeskip::before, .timeskip::after {
+    content: '';
+    flex: 1;
+    border-top: 0.5px dashed rgba(255,255,255,0.08);
+  }
+
+  /* ── post card ── */
+  .post {
+    background: var(--bg-surface);
+    border: 0.5px solid var(--border-soft);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+
+  .post:hover { border-color: var(--border-med); }
+
+  /* ── post header / toggle ── */
+  .post-cap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.125rem;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 0.5px solid transparent;
+    transition: background 0.12s, border-color 0.12s;
+    gap: 1rem;
+  }
+
+  .post-cap:hover { background: var(--bg-raised); }
+  .post-cap.open  { border-bottom-color: var(--border-soft); }
+
+  .char-tag {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .char-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .char-tag-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+  }
+
+  .char-tag-writer {
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .cap-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .post-datestamp {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.03em;
+  }
+
+  .toggle-icon {
+    font-size: 13px;
+    color: var(--text-muted);
+    transition: transform 0.2s ease;
+    display: inline-block;
+  }
+
+  .toggle-icon.open { transform: rotate(180deg); }
+
+  /* ── post body ── */
+  .post-body {
+    padding: 1.5rem 1.5rem 1.75rem;
+    display: none;
+  }
+
+  .post-body.open { display: block; }
+
+  /* ── avatar strip ── */
+  .avatar-strip {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 0.5px solid var(--border-soft);
+  }
+
+  .avatar-img {
+    width: 60px;
+    height: 108px;
+    border-radius: 4px;
+    object-fit: cover;
+    flex-shrink: 0;
+    display: block;
+  }
+
+  .avatar-initials {
+    width: 60px;
+    height: 108px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    border: 0.5px solid var(--border-soft);
+  }
+
+  .avatar-meta {
+    padding-top: 4px;
+  }
+
+  .avatar-char-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 3px;
+  }
+
+  .avatar-writer {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+
+  .avatar-hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-style: italic;
+    line-height: 1.55;
+    opacity: 0.6;
+  }
+
+  /* ── prose ── */
+  .post-prose {
+    font-family: var(--font-prose);
+    font-size: 17px;
+    line-height: 1.9;
+    color: var(--text-primary);
+    margin-bottom: 1.1em;
+  }
+
+  .post-prose:last-child { margin-bottom: 0; }
+
+  .post-prose em {
+    font-style: italic;
+    color: #C8C4BC;
+  }
+
+  /* ── chevron svg ── */
+  .chevron {
+    width: 13px;
+    height: 13px;
+    stroke: var(--text-muted);
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .chevron.open { transform: rotate(180deg); }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <span class="site-name" id="site-name">threads</span>
+  <nav>
+    <ul class="site-nav">
+      <li><a href="#">all threads</a></li>
+      <li><a href="#">characters</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main class="page" id="thread-container">
+</main>
+
+<script src="thread-data.js"></script>
+<script>
+  document.getElementById('site-name').textContent = SPACE.name;
+
+  function togglePost(cap) {
+    const body = cap.nextElementSibling;
+    const chevron = cap.querySelector('.chevron');
+    const isOpen = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    cap.classList.toggle('open', !isOpen);
+    chevron.classList.toggle('open', !isOpen);
+  }
+
+  function renderThread(thread) {
+    const container = document.getElementById('thread-container');
+
+    const beforeLabel = thread.before
+      ? `<a href="#">${thread.before}</a>`
+      : '—';
+    const afterLabel = thread.after
+      ? `<a href="#">${thread.after}</a>`
+      : '—';
+
+    const charNames = thread.characters
+      .map(id => SPACE.characters[id].name)
+      .join(' · ');
+
+    let html = `
+      <div class="thread-header">
+        <p class="board-label">${thread.board}</p>
+        <h1 class="thread-title">${thread.title}</h1>
+        <div class="meta-row">
+          <span class="pill pill-status">${thread.status}</span>
+          <span class="pill pill-time">${thread.timeline}</span>
+          <span class="pill pill-chars">${charNames}</span>
+        </div>
+        <div class="meta-row">
+          <span class="pill pill-nav">before: ${beforeLabel}</span>
+          <span class="pill pill-nav">after: ${afterLabel}</span>
+        </div>
+        <p class="thread-summary">${thread.summary}</p>
+      </div>
+      <p class="posts-label">— posts —</p>
+    `;
+
+    thread.posts.forEach((post, i) => {
+      const char = SPACE.characters[post.character];
+
+      if (post.timeskipBefore) {
+        html += `<div class="timeskip">${post.timeskipBefore}</div>`;
+      }
+
+      const isFirst = i === 0;
+      const openClass = isFirst ? 'open' : '';
+
+      const avatarEl = char.avatarUrl
+        ? `<img class="avatar-img" src="${char.avatarUrl}" alt="${char.name}">`
+        : `<div class="avatar-initials" style="background:${char.accent}18; color:${char.accent};">${char.name.split(' ').map(w => w[0]).join('')}</div>`;
+
+      const avatarHint = char.avatarUrl
+        ? ''
+        : `<p class="avatar-hint">add a 250×450px image by setting<br>avatarUrl in thread-data.js</p>`;
+
+      const paragraphs = post.body
+        .map(p => `<p class="post-prose">${p}</p>`)
+        .join('');
+
+      html += `
+        <div class="post">
+          <div class="post-cap ${openClass}" onclick="togglePost(this)">
+            <div class="char-tag">
+              <span class="char-dot" style="background:${char.accent};"></span>
+              <span class="char-tag-name">${char.name}</span>
+              <span class="char-tag-writer">· ${char.writer}</span>
+            </div>
+            <div class="cap-right">
+              <span class="post-datestamp">${post.date}</span>
+              <svg class="chevron ${openClass}" viewBox="0 0 24 24" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+          </div>
+          <div class="post-body ${openClass}">
+            <div class="avatar-strip">
+              ${avatarEl}
+              <div class="avatar-meta">
+                <p class="avatar-char-name">${char.name}</p>
+                <p class="avatar-writer">${char.writer}</p>
+                ${avatarHint}
+              </div>
+            </div>
+            ${paragraphs}
+          </div>
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
+  }
+
+  const thread = SPACE.threads[0];
+  renderThread(thread);
+</script>
+</body>
+</html>
