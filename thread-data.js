@@ -6,7 +6,7 @@ const SPACE = {
       name: "Sarah Russell",
       writer: "your name",
       accent: "#8A82C4",
-      avatarUrl: null
+      avatarUrl: "https://i.ibb.co/35Ht4YG2/New-Project-68.png"
     },
     wes: {
       id: "wes",
