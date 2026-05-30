@@ -6,13 +6,14 @@ const SPACE = {
       name: "Sarah Russell",
       writer: "your name",
       accent: "#8A82C4",
-      avatarUrl: null
+      icon: air-balloon,
     },
     wes: {
       id: "wes",
       name: "Wes Bell",
       writer: "your name",
-      accent: "#3AA882"
+      accent: "#3AA882",
+      icon: apple,
     }
   },
 
